@@ -1,0 +1,30 @@
+name: Continuous Deployment to GitHub Pages
+on:
+  push:
+    branches:
+      - main
+jobs:
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v1
+
+      - uses: cachix/install-nix-action@v13
+        with:
+          nix_path: nixpkgs=channel:nixos-unstable
+
+      - name: Build site
+        run: nix-shell --run build
+
+      - name: Publish site
+        if: success()
+        uses: crazy-max/ghaction-github-pages@v2
+        with:
+          build_dir: public/
+          target_branch: gh-pages
+          keep_history: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GH_PAT }}
